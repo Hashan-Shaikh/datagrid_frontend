@@ -10,17 +10,25 @@ import { Button, ButtonGroup } from '@mui/material';
 
 const CarDataGrid = () => {
     const [rowData, setRowData] = useState([]);
+    const [colHeaders, setColHeaders] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [columnDefs, setColumnDefs] = useState([{}]);
 
     useEffect(() => {
         if (searchTerm) {
-            axios.get(`http://localhost:3000/cars/search?searchTerm=${searchTerm}`)
-                .then(response => setRowData(response.data))
+            axios.get(`http://localhost:3000/dynamic/search?searchTerm=${searchTerm}`)
+                .then((response) => {
+                    //setColHeaders(response.data.headers)
+                    setRowData(response.data)
+                })
                 .catch(error => console.error(error));
         } else {
             // Fetch all data when there is no search term
-            axios.get('http://localhost:3000/cars')
-                .then((response) => setRowData(response.data))
+            axios.get('http://localhost:3000/dynamic')
+                .then((response) => {
+                    setColHeaders(response.data.headers)
+                    setRowData(response.data.data)
+                })
                 .catch(error => console.error(error));
         }
     }, [searchTerm]);
@@ -37,30 +45,44 @@ const CarDataGrid = () => {
         console.log(searchId)
     }
 
-    const columnDefs = [
-        { headerName: "Brand", field: "Brand" },
-        { headerName: "Model", field: "Model" },
-        { headerName: "Price", field: "PriceEuro" },
-        {
-            headerName: "Actions", 
-            cellRenderer: (params) => (
-                <ButtonGroup variant="contained" aria-label="action buttons">
-                    <Button 
-                        onClick={() => handleView(params.data._id)} 
-                        startIcon={<GrFormView />}
-                    >
-                        View
-                    </Button>
-                    <Button 
-                        onClick={() => handleDelete(params.data._id)} 
-                        startIcon={<MdOutlineDelete />}
-                    >
-                        Delete
-                    </Button>
-                </ButtonGroup>
-            ),
-        },
-    ];
+    const Action = {
+        headerName: "Actions", 
+        cellRenderer: (params) => (
+            <ButtonGroup variant="contained" aria-label="action buttons">
+                <Button 
+                    onClick={() => handleView(params.data._id)} 
+                    startIcon={<GrFormView />}
+                >
+                    View
+                </Button>
+                <Button 
+                    onClick={() => handleDelete(params.data._id)} 
+                    startIcon={<MdOutlineDelete />}
+                >
+                    Delete
+                </Button>
+            </ButtonGroup>
+        ),
+    }
+
+    useEffect(()=>{
+        
+        let columnInfo = {};
+        let colDefs = [];
+        
+        colHeaders?.forEach((header)=>{
+            columnInfo = {
+                headerName: header,
+                field: header,
+            }
+            colDefs.push(columnInfo)
+        })
+
+        colDefs.push(Action);
+        setColumnDefs(colDefs);
+
+    }, [colHeaders])
+
 
     return (
         <div>
