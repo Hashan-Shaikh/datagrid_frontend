@@ -1,10 +1,15 @@
-import CarDataGrid from "./CarDataGrid/CarDataGrid";
+import DataGrid from "./DataGrid/DataGrid";
+import Details from "./DataGrid/Details";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 function App() {
   return (
-    <div>
-      <CarDataGrid />
-    </div>
+    <Router>
+      <Routes>
+          <Route path="/" element={<DataGrid />} />
+          <Route path="/details/:id" element={<Details />} />
+      </Routes>
+    </Router>
   );
 }
 

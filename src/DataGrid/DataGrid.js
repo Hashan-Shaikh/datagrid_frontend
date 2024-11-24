@@ -5,7 +5,8 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 import axios from 'axios';
 import { GrFormView } from "react-icons/gr";
 import { MdOutlineDelete } from "react-icons/md";
-import { Button, ButtonGroup } from '@mui/material'; 
+import { Button, ButtonGroup } from '@mui/material';
+import { useNavigate } from 'react-router-dom'; 
 
 
 const CarDataGrid = () => {
@@ -13,6 +14,8 @@ const CarDataGrid = () => {
     const [colHeaders, setColHeaders] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [columnDefs, setColumnDefs] = useState([{}]);
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (searchTerm) {
@@ -39,6 +42,7 @@ const CarDataGrid = () => {
 
     const handleView = (searchId) => {
         console.log(searchId)
+        navigate(`/details/${searchId}`);
     }
 
     const handleDelete = (searchId) => {
@@ -53,13 +57,13 @@ const CarDataGrid = () => {
                     onClick={() => handleView(params.data._id)} 
                     startIcon={<GrFormView />}
                 >
-                    View
+                    
                 </Button>
                 <Button 
                     onClick={() => handleDelete(params.data._id)} 
                     startIcon={<MdOutlineDelete />}
                 >
-                    Delete
+                    
                 </Button>
             </ButtonGroup>
         ),
@@ -69,6 +73,8 @@ const CarDataGrid = () => {
         
         let columnInfo = {};
         let colDefs = [];
+
+        colDefs.push(Action);
         
         colHeaders?.forEach((header)=>{
             columnInfo = {
@@ -78,7 +84,6 @@ const CarDataGrid = () => {
             colDefs.push(columnInfo)
         })
 
-        colDefs.push(Action);
         setColumnDefs(colDefs);
 
     }, [colHeaders])
