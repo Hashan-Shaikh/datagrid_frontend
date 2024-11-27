@@ -1,4 +1,4 @@
-export const operations = [
+export const filterOptions = [
     'contains',
     'equals',
     'starts with',
