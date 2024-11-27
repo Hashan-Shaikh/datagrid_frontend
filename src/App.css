@@ -1,38 +1,12 @@
-.App {
-  text-align: center;
+/* Apply a linear gradient to the entire page */
+body {
+  background: linear-gradient(to right, #0e407a, #3085e7); /* Gradient from black to blue */
+  color: white;  /* Set the default text color to white */
+  margin: 0;     /* Remove default margin */
+  min-height: 100vh; /* Make sure it covers the full height of the screen */
+  overflow-x: hidden;  /* Disable horizontal scrolling */
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+html, body {
+  height: 100%; /* Ensure the body takes up the full height of the page */
 }

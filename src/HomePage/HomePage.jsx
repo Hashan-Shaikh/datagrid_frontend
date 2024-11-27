@@ -1,27 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import axios from 'axios';
 import { GrFormView } from "react-icons/gr";
 import { MdOutlineDelete } from "react-icons/md";
-import { Button, ButtonGroup, Menu, MenuItem, TextField, IconButton, Select, MenuItem as MuiMenuItem, InputLabel, FormControl, RadioGroup, Radio, FormControlLabel, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText } from '@mui/material';
+import { Button, ButtonGroup, Menu, MenuItem, TextField, IconButton, Select, MenuItem as MuiMenuItem, InputLabel, FormControl, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText, Box, Typography, Paper, Grid2 } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; 
 import { CiFilter } from "react-icons/ci";
 import { operations } from '../operations/operations';
+import SearchBar from './SearchBar';
+import DataTable from './DataTable';
 
-const DataGrid = () => {
+const HomePage = () => {
+
     const [rowData, setRowData] = useState([]);
     const [colHeaders, setColHeaders] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [columnDefs, setColumnDefs] = useState([{}]);
     const [openModal, setOpenModal] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
+
     const [filterParams, setFilterParams] = useState({
         column: '',
         operation: '',
         value: ''
-      });
+    });
+
     const [anchorEl, setAnchorEl] = useState(null); //for dropdown anchor
 
     const navigate = useNavigate();
@@ -49,19 +53,17 @@ const DataGrid = () => {
     };
 
     const handleView = (searchId) => {
-        console.log(searchId)
         navigate(`/details/${searchId}`);
     }
 
+    // Open the modal when delete button is clicked
     const handleDelete = (searchId) => {
-        // Open the modal when delete is clicked
         setDeleteId(searchId);
         setOpenModal(true);
     }
 
     const handleFilterClick = (event) => {
         setAnchorEl(event.currentTarget);
-        // setFilterParams(prev => ({ ...prev, column }));
     };
 
     const handleFilterSelect = (operation) => {
@@ -110,34 +112,35 @@ const DataGrid = () => {
 
     const Action = {
         headerName: "Actions", 
-        headerComponent: (props) => (
-            <div>
-                <span>{props.displayName}</span>
-                <IconButton
-                    onClick={(event) => handleFilterClick(event)}
-                    size="small"
-                >
-                    <CiFilter />
-                </IconButton>
-            </div>
-        ),
+        // headerComponent: (props) => (
+        //     <div>
+        //         <span>{props.displayName}</span>
+        //         <IconButton
+        //             onClick={(event) => handleFilterClick(event)}
+        //             size="small"
+        //         >
+        //             <CiFilter />
+        //         </IconButton>
+        //     </div>
+        // ),
         cellRenderer: (params) => (
-            <ButtonGroup variant="contained" aria-label="action buttons">
+            <Box sx={{display:"flex", alignItems:"center", justifyContent:"center"}}>
+            <ButtonGroup variant="contained" aria-label="action buttons" sx={{pt:0.5}}>
                 <Button 
                     onClick={() => handleView(params.data._id)} 
                     startIcon={<GrFormView />}
-                >
-                    
-                </Button>
+                    color='primary'
+                />
                 <Button 
                     onClick={() => handleDelete(params.data._id)} 
                     startIcon={<MdOutlineDelete />}
-                >
-                    
-                </Button>
+                    sx={{backgroundColor:"#f76f6f"}}
+                />
             </ButtonGroup>
+            </Box>
         ),
     }
+
 
     useEffect(()=>{
         
@@ -150,18 +153,6 @@ const DataGrid = () => {
             columnInfo = {
                 headerName: header,
                 field: header,
-                // Add the filter icon to each column header
-                // headerComponent: (props) => (
-                //     <div>
-                //         <span>{props.displayName}</span>
-                //         <IconButton
-                //             onClick={(event) => handleFilterClick(event, header)}
-                //             size="small"
-                //         >
-                //             <CiFilter />
-                //         </IconButton>
-                //     </div>
-                // )
             }
             colDefs.push(columnInfo)
         })
@@ -172,25 +163,32 @@ const DataGrid = () => {
 
 
     return (
-        <div>
+        <Box sx={{ p: 4 }}>
+            {/* Header with Typography */}
+            {/* <Typography variant="h4" component="h1" gutterBottom>
+                Generic Data Grid App
+            </Typography> */}
 
-            <TextField
-                id="filled-search"
-                label="Search field"
-                type="search"
-                variant="filled"
-                value={searchTerm}
-                onChange={onSearchChange}
-            />
-
-            <div className="ag-theme-alpine" style={{ height: 400, width: '100%' }}>
-                <AgGridReact
-                    columnDefs={columnDefs}
-                    rowData={rowData}
-                    pagination={true}
-                    domLayout='autoHeight'
+            <Typography variant="h4" component="div" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box
+                    component="img"
+                    src="./bmw.svg" // Replace with your image URL
+                    alt="BMW LOGO"
+                    sx={{ width: 40, height: 40, marginRight: 2 }} // Adjust size and spacing as needed
                 />
-            </div>
+                Generic Data Grid App
+            </Typography>
+
+            <Paper sx={{ px: 2, pb:2, mb: 4, display:"flex", alignItems:"center", gap:2 }}>
+                {/* Search Bar Section */}
+                <Button sx={{backgroundColor:"#1565c0", height:50, width:100, mt:3, gap:1}} onClick={(event) => handleFilterClick(event)} size="large" ><CiFilter color='white' /><Typography color='white' sx={{textTransform:"none"}}>Filter</Typography></Button>
+                <SearchBar searchTerm={searchTerm} onSearchChange={onSearchChange} />
+            </Paper>
+
+            
+            {/* Data Table Section */}
+            <DataTable columnDefs={columnDefs} rowData={rowData} />
+            
 
             {/* Filter Menu */}
             <Menu
@@ -262,8 +260,8 @@ const DataGrid = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </div>
+        </Box>
     );
 };
 
-export default DataGrid;
+export default HomePage;
