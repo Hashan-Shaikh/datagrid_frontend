@@ -1,261 +1,124 @@
-import React, { useState, useEffect } from 'react';
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
+import React, { useEffect, useState } from 'react';
+import { Button, Typography, Box, Container } from '@mui/material';
 import axios from 'axios';
-import { GrFormView } from "react-icons/gr";
-import { MdOutlineDelete } from "react-icons/md";
-import { Button, ButtonGroup, Menu, MenuItem, TextField, Select, MenuItem as MuiMenuItem, InputLabel, FormControl, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText, Box, Typography, Paper} from '@mui/material';
-import { useNavigate } from 'react-router-dom'; 
-import { CiFilter } from "react-icons/ci";
-import { filterOptions } from '../constants/filterOptions';
-import SearchBar from './SearchBar';
-import DataTable from './DataTable';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
+  const [currentLetter, setCurrentLetter] = useState(0);
+  const appName = "Generic Data Grid App";
 
-    const [rowData, setRowData] = useState([]); //for setting all rows of grid
-    const [colHeaders, setColHeaders] = useState([]); //for settting col headers
-    const [searchTerm, setSearchTerm] = useState(''); //for setting searched value in a grid
-    const [columnDefs, setColumnDefs] = useState([{}]); //we use col headers to map col definition which is used by grid
-    const [openModal, setOpenModal] = useState(false); //for opening dialog modal
-    const [deleteId, setDeleteId] = useState(null); //setting deleteId for the record to be deleted
+  const navigate = useNavigate(); //initialize navigate hook for navigation
 
-    //state made to set filtering params in a single state and request to backend api
-    const [filterParams, setFilterParams] = useState({
-        column: '',
-        operation: '',
-        value: ''
-    });
+  useEffect(() => {
+    // Show one letter every 0.3 seconds
+    if (currentLetter < appName.length) {
+      const timer = setTimeout(() => setCurrentLetter(currentLetter + 1), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [currentLetter]);
 
-    //controls the whole filter menu
-    const [anchorEl, setAnchorEl] = useState(null);
+  // Handle file upload
+  const handleFileUpload = async (event) => {
+    const fileInput = event.target;
+    const file = event.target.files[0];
+    const formData = new FormData();
 
-    const navigate = useNavigate();
+    formData.append('file', file, file?.name);
 
-    //for first time load all the data but call api again if search term is changed
-    useEffect(() => {
-        if (searchTerm) {
-            axios.get(`${process.env.REACT_APP_BACKEND_URL}/dynamic/search?searchTerm=${searchTerm}`)
-                .then((response) => {
-                    setRowData(response.data)
-                })
-                .catch(error => console.error(error));
-        } else {
-            axios.get(`${process.env.REACT_APP_BACKEND_URL}/dynamic`)
-                .then((response) => {
-                    setColHeaders(response.data.headers)
-                    setRowData(response.data.data)
-                })
-                .catch(error => console.error(error));
-        }
-    }, [searchTerm]);
+    if (file && file.type === "text/csv") {
+      try {
+        // Replace with your backend server URL
+        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/file/upload`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data', // Required for file uploads
+          },
+        });
 
-    const onSearchChange = (event) => {
-        setSearchTerm(event.target.value);
-    };
+        // Handle the response from the backend
+        console.log("File uploaded successfully:", response.data);
+        navigate('/grid');
+        alert("File uploaded successfully!");
 
-    //navigate to details page
-    const handleView = (searchId) => {
-        navigate(`/details/${searchId}`);
+      } catch (error) {
+        // Handle any errors during the file upload
+        console.error("Error uploading file:", error);
+        alert("Failed to upload file. Please try again.");
+      }
+    } 
+    else {
+      alert("Please upload a valid CSV file.");
     }
 
-    const handleDelete = (searchId) => {
-        setDeleteId(searchId);
-        setOpenModal(true);
-    }
-
-    //opens or close the filter menu
-    const handleFilterClick = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    //set the operation field for filter
-    const handleFilterSelect = (operation) => {
-        setFilterParams(prev => ({ ...prev, operation }));
-    };
-
-    //set the column field for filter
-    const handleFilterColumnChange = (event) => {
-        const column = event.target.value;
-        setFilterParams(prev => ({ ...prev, column }));
-    }
-    
-    //set the value field for filter
-    const handleFilterValueChange = (event) => {
-        setFilterParams(prev => ({ ...prev, value: event.target.value }));
-    };
-
-    // - destructure filter state object
-    // - close the filter menu
-    // - make the request to a filter api by sending every value in the url query params
-    const handleFilterApply = () => {
-        const { column, operation, value } = filterParams;
-        setAnchorEl(false);
-
-        axios.get(`${process.env.REACT_APP_BACKEND_URL}/dynamic/filter?column=${column}&operation=${operation}&value=${value}`)
-        .then((response) => {
-            setRowData(response.data);
-        })
-        .catch(error => console.error(error));
-    };
-
-    //call the delete api on backend to delete a record and then filter the exisiting data on frontend
-    const handleConfirmDelete = () => {
-        
-        axios.delete(`${process.env.REACT_APP_BACKEND_URL}/dynamic/delete?_id=${deleteId}`)
-            .then(response => {
-                setOpenModal(false);
-                setRowData(prevData => prevData.filter(item => item._id !== deleteId));
-            })
-            .catch(error => {
-                console.error(error);
-                setOpenModal(false); 
-            });
-    }
-
-    const handleCloseModal = () => {
-        setOpenModal(false); 
-    }
-
-    //make an additional column named as actions in ag grid for performing viewing and deleting actions
-    const Action = {
-        cellRenderer: (params) => (
-            <Box sx={{display:"flex", alignItems:"center", justifyContent:"center"}}>
-            <ButtonGroup variant="contained" aria-label="action buttons" sx={{pt:0.5}}>
-                <Button 
-                    onClick={() => handleView(params.data._id)} 
-                    startIcon={<GrFormView />}
-                    color='primary'
-                />
-                <Button 
-                    onClick={() => handleDelete(params.data._id)} 
-                    startIcon={<MdOutlineDelete />}
-                    sx={{backgroundColor:"#f76f6f"}}
-                />
-            </ButtonGroup>
-            </Box>
-        ),
-    }
-
-    //using column headers to make column definitions for ag grid
-    //call useEffect everytime column header changes
-    useEffect(()=>{
-        
-        let columnInfo = {};
-        let colDefs = [];
-
-        colDefs.push(Action);
-        
-        colHeaders?.forEach((header)=>{
-            columnInfo = {
-                headerName: header,
-                field: header,
-            }
-            colDefs.push(columnInfo)
-        })
-
-        setColumnDefs(colDefs);
-
-    }, [colHeaders])
+    // Reset the file input value so the same file can be uploaded again
+    fileInput.value = null;
+  };
 
 
-    return (
-        <Box sx={{ p: 4 }}>
+  return (
+    <Container
+      maxWidth="sm"
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+      }}
+    >
+      {/* BMW Logo */}
+      <Box sx={{ mb: 4 }}>
+        <img
+          src={'./bmw.svg'} 
+          alt="BMW Logo"
+          style={{ width: '200px', height: 'auto' }}
+        />
+      </Box>
 
-            <Typography variant="h4" component="div" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                <Box
-                    component="img"
-                    src="./bmw.svg" 
-                    alt="BMW LOGO"
-                    sx={{ width: 40, height: 40, marginRight: 2 }} 
-                />
-                Generic Data Grid App
-            </Typography>
+      {/* App Name with Animation */}
+      <Typography
+        variant="h4"
+        component="div"
+        sx={{
+          fontWeight: 'bold',
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          fontSize: '2rem',
+          textAlign: 'center',
+          color: 'black',
+        }}
+      >
+        {appName.split("").map((letter, index) => (
+          <span
+            key={index}
+            style={{
+              opacity: index < currentLetter ? 1 : 0,
+              transition: 'opacity 0.3s ease-in-out',
+              margin: '0 2px',
+            }}
+          >
+            {letter}
+          </span>
+        ))}
+      </Typography>
 
-            <Paper sx={{ px: 2, pb:2, mb: 4, display:"flex", alignItems:"center", gap:2 }}>
-                <Button sx={{backgroundColor:"#1565c0", height:50, width:100, mt:3, gap:1}} onClick={(event) => handleFilterClick(event)} size="large" ><CiFilter color='white' /><Typography color='white' sx={{textTransform:"none"}}>Filter</Typography></Button>
-                <SearchBar searchTerm={searchTerm} onSearchChange={onSearchChange} />
-            </Paper>
-
-            
-            {/* Data Table Section */}
-            <DataTable columnDefs={columnDefs} rowData={rowData} />
-            
-
-            {/* Filter Menu */}
-            <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={() => setAnchorEl(null)}
-            >
-                {/* Column Dropdown */}
-                <MenuItem>
-                    <FormControl fullWidth>
-                        <InputLabel>Select Column</InputLabel>
-                        <Select
-                            value={filterParams.column}
-                            onChange={handleFilterColumnChange}
-                            label="Select Column"
-                        >
-                            {colHeaders.map((header) => (
-                                <MuiMenuItem key={header} value={header}>
-                                    {header}
-                                </MuiMenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </MenuItem>
-
-                {/* Operations Dropdown */}
-                <MenuItem>
-                    <FormControl fullWidth>
-                        <InputLabel>Select Operation</InputLabel>
-                        <Select
-                            disabled={filterParams.column === ""}
-                            value={filterParams.operation}
-                            onChange={(event) => handleFilterSelect(event.target.value)}
-                            label="Select Operation"
-                        >
-                            {filterOptions.map((option) => (
-                                <MuiMenuItem key={option} value={option}>
-                                    {option}
-                                </MuiMenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </MenuItem>
-                
-                {/* Value Field */}
-                <MenuItem sx={{gap:2}}>
-                    <TextField
-                            disabled={filterParams.operation === "" || filterParams.operation === "is empty"}
-                            label={`Filter ${filterParams.column}`}
-                            value={filterParams.value}
-                            onChange={handleFilterValueChange}
-                        />
-                    <Button sx={{color:"white", backgroundColor:"#1565c0"}} onClick={handleFilterApply}>Apply Filter</Button>
-                </MenuItem>
-            </Menu>
-
-            {/* Confirmation Modal */}
-            <Dialog open={openModal} onClose={handleCloseModal}>
-                <DialogTitle>Confirm Deletion</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Are you sure you want to delete this record?
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseModal} color="primary">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleConfirmDelete} color="primary">
-                        Confirm
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
-    );
+      {/* File Uploader */}
+      <Box sx={{ mt: 4 }}>
+        <Button
+          variant="contained"
+          component="label"
+        >
+          Upload CSV
+          <input
+            type="file"
+            hidden
+            accept=".csv"
+            onChange={handleFileUpload}
+          />
+        </Button>
+      </Box>
+    </Container>
+  );
 };
 
 export default HomePage;
