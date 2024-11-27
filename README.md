@@ -1,3 +1,8 @@
+# Project Description
+
+A generic data grid react app which handles and perform operations on any type of dynamic schema provided by the backend
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -9,10 +14,14 @@ In the project directory, you can run:
 ### `npm start`
 
 Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser. (if express server is running so the react app will start at 3001 port)
 
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
+
+### Set the environment variable 
+
+Set the enviroment variable by creating .env file (.env.example file is given to see what environment variables to set)
 
 ### `npm test`
 
