@@ -5,20 +5,12 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 import axios from 'axios';
 import { GrFormView } from "react-icons/gr";
 import { MdOutlineDelete } from "react-icons/md";
-import { Button, ButtonGroup, Menu, MenuItem, TextField, IconButton } from '@mui/material';
+import { Button, ButtonGroup, Menu, MenuItem, TextField, IconButton, Select, MenuItem as MuiMenuItem, InputLabel, FormControl, RadioGroup, Radio, FormControlLabel, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; 
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import { DialogContentText } from '@mui/material';
 import { CiFilter } from "react-icons/ci";
 import { operations } from '../operations/operations';
-import { RadioGroup, Radio, FormControlLabel } from '@mui/material';
 
-
-
-const CarDataGrid = () => {
+const DataGrid = () => {
     const [rowData, setRowData] = useState([]);
     const [colHeaders, setColHeaders] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -38,7 +30,6 @@ const CarDataGrid = () => {
         if (searchTerm) {
             axios.get(`http://localhost:3000/dynamic/search?searchTerm=${searchTerm}`)
                 .then((response) => {
-                    //setColHeaders(response.data.headers)
                     setRowData(response.data)
                 })
                 .catch(error => console.error(error));
@@ -68,15 +59,19 @@ const CarDataGrid = () => {
         setOpenModal(true);
     }
 
-    const handleFilterClick = (event, column) => {
+    const handleFilterClick = (event) => {
         setAnchorEl(event.currentTarget);
-        setFilterParams(prev => ({ ...prev, column }));
+        // setFilterParams(prev => ({ ...prev, column }));
     };
 
     const handleFilterSelect = (operation) => {
         setFilterParams(prev => ({ ...prev, operation }));
-        //setAnchorEl(null);
     };
+
+    const handleFilterColumnChange = (event) => {
+        const column = event.target.value;
+        setFilterParams(prev => ({ ...prev, column }));
+    }
 
     const handleFilterValueChange = (event) => {
         setFilterParams(prev => ({ ...prev, value: event.target.value }));
@@ -115,6 +110,17 @@ const CarDataGrid = () => {
 
     const Action = {
         headerName: "Actions", 
+        headerComponent: (props) => (
+            <div>
+                <span>{props.displayName}</span>
+                <IconButton
+                    onClick={(event) => handleFilterClick(event)}
+                    size="small"
+                >
+                    <CiFilter />
+                </IconButton>
+            </div>
+        ),
         cellRenderer: (params) => (
             <ButtonGroup variant="contained" aria-label="action buttons">
                 <Button 
@@ -145,17 +151,17 @@ const CarDataGrid = () => {
                 headerName: header,
                 field: header,
                 // Add the filter icon to each column header
-                headerComponent: (props) => (
-                    <div>
-                        <span>{props.displayName}</span>
-                        <IconButton
-                            onClick={(event) => handleFilterClick(event, header)}
-                            size="small"
-                        >
-                            <CiFilter />
-                        </IconButton>
-                    </div>
-                )
+                // headerComponent: (props) => (
+                //     <div>
+                //         <span>{props.displayName}</span>
+                //         <IconButton
+                //             onClick={(event) => handleFilterClick(event, header)}
+                //             size="small"
+                //         >
+                //             <CiFilter />
+                //         </IconButton>
+                //     </div>
+                // )
             }
             colDefs.push(columnInfo)
         })
@@ -167,6 +173,7 @@ const CarDataGrid = () => {
 
     return (
         <div>
+
             <TextField
                 id="filled-search"
                 label="Search field"
@@ -175,6 +182,7 @@ const CarDataGrid = () => {
                 value={searchTerm}
                 onChange={onSearchChange}
             />
+
             <div className="ag-theme-alpine" style={{ height: 400, width: '100%' }}>
                 <AgGridReact
                     columnDefs={columnDefs}
@@ -190,30 +198,43 @@ const CarDataGrid = () => {
                 open={Boolean(anchorEl)}
                 onClose={() => setAnchorEl(null)}
             >
-                {/* {operations.map((operation) => (
-                    <MenuItem onClick={() => handleFilterSelect(operation)}>{operation}</MenuItem>
-                ))} */}
+                {/* Column Dropdown */}
                 <MenuItem>
-                    <RadioGroup
-                        value={filterParams.operation} // Bind the selected operation to the state
-                        onChange={(event) =>
-                            // setFilterParams((prev) => ({
-                            //     ...prev,
-                            //     operation: event.target.value,
-                            // }))
-                            handleFilterSelect(event.target.value)
-                        }
-                    >
-                        {operations.map((operation) => (
-                            <FormControlLabel
-                                key={operation}
-                                value={operation}
-                                control={<Radio />}
-                                label={operation}
-                            />
-                        ))}
-                    </RadioGroup>
+                    <FormControl fullWidth>
+                        <InputLabel>Select Column</InputLabel>
+                        <Select
+                            value={filterParams.column}
+                            onChange={handleFilterColumnChange}
+                            label="Select Column"
+                        >
+                            {colHeaders.map((header) => (
+                                <MuiMenuItem key={header} value={header}>
+                                    {header}
+                                </MuiMenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                 </MenuItem>
+
+                {/* Operations Dropdown */}
+                <MenuItem>
+                    <FormControl fullWidth>
+                        <InputLabel>Select Operation</InputLabel>
+                        <Select
+                            value={filterParams.operation}
+                            onChange={(event) => handleFilterSelect(event.target.value)}
+                            label="Select Operation"
+                        >
+                            {operations.map((operation) => (
+                                <MuiMenuItem key={operation} value={operation}>
+                                    {operation}
+                                </MuiMenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                </MenuItem>
+                
+                {/* Value Field */}
                 <MenuItem>
                     <TextField
                             label={`Filter ${filterParams.column}`}
@@ -245,4 +266,4 @@ const CarDataGrid = () => {
     );
 };
 
-export default CarDataGrid;
+export default DataGrid;
