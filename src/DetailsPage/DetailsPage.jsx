@@ -11,7 +11,8 @@ const DetailsPage = () => {
 
     //fetch the record from backend api through the id
     useEffect(() => {
-        axios.get(`http://localhost:3000/dynamic/view?_id=${id}`)
+        console.log(id);
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/dynamic/view?_id=${id}`)
             .then((response) => {
                 setRecord(response.data);
             })
